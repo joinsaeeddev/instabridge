@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
@@ -16,24 +17,23 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-18 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 40 40"
-              fill="none"
-              className="text-primary"
-            >
-              <path
-                d="M20 4C14 4 9 8 8 13.5C4 14.5 1 18 1 22c0 5 4 9 9 9h22c4.5 0 8-3.5 8-8 0-4-3-7.5-7-8C32 9 26.5 4 20 4z"
-                fill="currentColor"
-              />
-            </svg>
-            <span className="text-lg font-bold tracking-tight text-dark uppercase">
-              Instabridge
-            </span>
+            <Image
+              src="/logo.avif"
+              alt="Instabridge logo"
+              width={100}
+              height={10}
+              style={{
+                display: "block",
+                width: "100%",
+                height: "100%",
+                borderRadius: "inherit",
+                objectPosition: "center center",
+                objectFit: "cover",
+              }}
+            />
           </Link>
 
           {/* Desktop Nav */}
@@ -48,7 +48,7 @@ export default function Header() {
               </Link>
             ))}
             <Link
-              href="/contact"
+              href="https://console.instabridge.co.za/rs-signin"
               className="ml-4 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark transition-colors"
             >
               Client Portal
