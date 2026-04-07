@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const footerSections = [
   {
@@ -34,22 +35,18 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row gap-8 md:gap-10">
           {/* Brand — 1/2 */}
           <div className="md:w-1/2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 40 40"
-                fill="none"
-                className="text-primary"
-              >
-                <path
-                  d="M20 4C14 4 9 8 8 13.5C4 14.5 1 18 1 22c0 5 4 9 9 9h22c4.5 0 8-3.5 8-8 0-4-3-7.5-7-8C32 9 26.5 4 20 4z"
-                  fill="currentColor"
-                />
-              </svg>
-              <span className="text-white font-bold uppercase text-sm">
-                Instabridge
-              </span>
+            <Link href="/" className="inline-block mb-4">
+              <Image
+                src="/whiteLogo.png"
+                alt="Instabridge logo"
+                width={140}
+                height={40}
+                style={{
+                  width: "auto",
+                  height: "auto",
+                  maxWidth: "140px",
+                }}
+              />
             </Link>
             <p className="text-sm text-muted leading-relaxed">
               &copy; {new Date().getFullYear()} Instabridge South Africa. All
