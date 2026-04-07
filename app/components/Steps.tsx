@@ -49,7 +49,7 @@ export default function Steps() {
               transition={{ duration: 0.4, delay: i * 0.15 }}
               className="relative"
             >
-              <span className="text-4xl sm:text-5xl font-black text-primary-light leading-none">
+              <span className="text-4xl sm:text-5xl font-black text-muted leading-none">
                 {step.number}
               </span>
               <h3 className="mt-3 text-base sm:text-lg font-bold text-dark">
