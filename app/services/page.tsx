@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import PageHero from "../components/PageHero";
+import PackageCards from "../components/PackageCards";
 
 const services = [
   {
@@ -106,6 +107,30 @@ export default function ServicesPage() {
               Get Started Today
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-20 md:py-24 bg-gray-50">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-10 sm:mb-12"
+          >
+            <span className="text-sm font-bold text-primary uppercase tracking-wider">
+              Packages
+            </span>
+            <h2 className="mt-1 text-2xl sm:text-3xl md:text-4xl font-black text-dark">
+              Choose Your Plan
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">
+              Pick the storage package that fits your needs. Upgrade or change anytime.
+            </p>
+          </motion.div>
+
+          <PackageCards />
         </div>
       </section>
     </>
