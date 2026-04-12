@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export type Plan = {
   name: string;
@@ -59,33 +58,7 @@ export const plans: Plan[] = [
   },
 ];
 
-// Paystack public key — set NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY in .env.local.
-// Use the test key (pk_test_...) during development and the live key
-// (pk_live_...) in production.
-const PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? "";
-
-// Minimal type for the global injected by Paystack's inline.js script.
-type PaystackHandler = { openIframe: () => void };
-type PaystackSetupOptions = {
-  key: string;
-  email: string;
-  amount: number;
-  currency: string;
-  ref?: string;
-  metadata?: Record<string, unknown>;
-  callback?: (response: { reference: string }) => void;
-  onClose?: () => void;
-};
-declare global {
-  interface Window {
-    PaystackPop?: {
-      setup: (options: PaystackSetupOptions) => PaystackHandler;
-    };
-  }
-}
-
 export default function PackageCards() {
-  const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
@@ -104,87 +77,65 @@ export default function PackageCards() {
     setError("");
   }
 
-  function startPaystackCheckout(e: React.FormEvent) {
+  async function startPaystackCheckout(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedPlan) return;
 
-    // Basic email validation — Paystack will reject anything malformed too.
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError("Please enter a valid email address.");
       return;
     }
 
-    if (typeof window === "undefined" || !window.PaystackPop) {
-      setError("Payment system is still loading. Please try again in a moment.");
-      return;
-    }
-
-    if (!PAYSTACK_PUBLIC_KEY) {
-      setError("Payment is not configured. Please contact support.");
-      console.error(
-        "[Paystack] Missing NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY environment variable."
-      );
-      return;
-    }
-
     setSubmitting(true);
+    setError("");
 
     try {
-      const handler = window.PaystackPop.setup({
-        key: PAYSTACK_PUBLIC_KEY,
-        email,
-        // Paystack expects the amount in the smallest currency unit
-        // (kobo / cents). Multiply major units by 100.
-        amount: Math.round(selectedPlan.amount * 100),
-        currency: selectedPlan.currency,
-        // Metadata is delivered to the backend webhook AND surfaced in the
-        // merchant notification email — so the admin sees plan + email and can
-        // manually create the user account within 24 hours.
-        metadata: {
-          plan_name: selectedPlan.name,
-          plan_price: selectedPlan.price,
-          custom_fields: [
-            {
-              display_name: "Plan",
-              variable_name: "plan_name",
-              value: selectedPlan.name,
-            },
-            {
-              display_name: "Plan Price",
-              variable_name: "plan_price",
-              value: selectedPlan.price,
-            },
-            {
-              display_name: "Customer Email",
-              variable_name: "customer_email",
-              value: email,
-            },
-          ],
-        },
-        callback: function (response) {
-          // Payment success — backend will receive the Paystack webhook and
-          // the admin will manually provision the account within 24 hours.
-          // (Backend dev is wiring up /api/paystack/webhook separately.)
-          console.log("[Paystack] Payment successful", response);
-          setSubmitting(false);
-          setSelectedPlan(null);
-          const successUrl =
-            `/payment-success?reference=${encodeURIComponent(response.reference)}` +
-            `&email=${encodeURIComponent(email)}`;
-          setEmail("");
-          router.push(successUrl);
-        },
-        onClose: function () {
-          console.log("[Paystack] Payment popup closed by user");
-          setSubmitting(false);
-        },
+      const res = await fetch("/api/paystack/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          amount: selectedPlan.amount,
+          currency: selectedPlan.currency,
+          metadata: {
+            plan_name: selectedPlan.name,
+            plan_price: selectedPlan.price,
+            custom_fields: [
+              {
+                display_name: "Plan",
+                variable_name: "plan_name",
+                value: selectedPlan.name,
+              },
+              {
+                display_name: "Plan Price",
+                variable_name: "plan_price",
+                value: selectedPlan.price,
+              },
+              {
+                display_name: "Customer Email",
+                variable_name: "customer_email",
+                value: email,
+              },
+            ],
+          },
+        }),
       });
 
-      handler.openIframe();
+      const data = await res.json();
+
+      if (!res.ok || !data.authorization_url) {
+        setError(data.error || "Failed to initialize payment. Please try again.");
+        setSubmitting(false);
+        return;
+      }
+
+      // Redirect the user to Paystack's hosted checkout page.
+      // No iframes, no popups — just a full-page redirect.
+      window.location.href = data.authorization_url;
     } catch (err) {
-      console.error("[Paystack] Failed to open checkout", err);
+      console.error("[Paystack] Failed to initialize checkout", err);
       setError(
-        "Could not open the payment popup. Please check your connection and try again."
+        "Could not connect to the payment server. Please check your connection and try again."
       );
       setSubmitting(false);
     }
@@ -329,7 +280,7 @@ export default function PackageCards() {
                 className="w-full rounded-lg cursor-pointer bg-primary py-2.5 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {submitting
-                  ? "Opening Paystack…"
+                  ? "Redirecting to Paystack…"
                   : `Pay ${selectedPlan.price} with Paystack`}
               </button>
 

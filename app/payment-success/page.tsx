@@ -7,9 +7,12 @@ import { motion } from "framer-motion";
 export default function PaymentSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reference?: string; email?: string }>;
+  searchParams: Promise<{ reference?: string; trxref?: string; email?: string }>;
 }) {
-  const { reference, email } = use(searchParams);
+  const params = use(searchParams);
+  // Paystack redirect sends both `reference` and `trxref` as query params
+  const reference = params.reference || params.trxref;
+  const email = params.email;
 
   return (
     <section className="min-h-[70vh] bg-white py-16 sm:py-20 md:py-24">
